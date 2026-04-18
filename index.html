@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Batalla Matemática Final</title>
+
+<style>
+body {
+    font-family: 'Comic Sans MS', cursive;
+    background: linear-gradient(#87CEEB, #4CAF50);
+    text-align: center;
+    transition: background 0.3s;
+}
+
+h1 { color: #ff5722; }
+
+/* Cohetes */
+.rocket {
+    width: 80px;
+    height: 140px;
+    position: absolute;
+}
+
+.body {
+    width: 60px;
+    height: 100px;
+    background: #2196f3;
+    border-radius: 30px;
+    margin: auto;
+    position: relative;
+}
+
+.player2 .body { background: #f44336; }
+
+.window {
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+/* MISIL */
+.misil {
+    width: 20px;
+    height: 10px;
+    background: black;
+    position: absolute;
+    top: 50%;
+    display: none;
+}
+
+.misil-1 { animation: disparo1 0.6s linear forwards; }
+.misil-2 { animation: disparo2 0.6s linear forwards; }
+
+@keyframes disparo1 {
+    0% { left: 25%; }
+    100% { left: 70%; }
+}
+
+@keyframes disparo2 {
+    0% { left: 70%; }
+    100% { left: 25%; }
+}
+
+/* Explosión */
+.explosion {
+    width: 40px;
+    height: 40px;
+    background: yellow;
+    border-radius: 50%;
+    position: absolute;
+    display: none;
+}
+
+/* UI */
+.caja {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    display: inline-block;
+}
+
+/* MENÚ FINAL */
+.menu-final {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.menu-final button {
+    font-size: 20px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    background: #ff9800;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button {
+    font-size: 18px;
+    padding: 10px 20px;
+    background: #ff9800;
+    border: none;
+    border-radius: 10px;
+}
+
+input {
+    font-size: 18px;
+    padding: 5px;
+    width: 80px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🚀 Batalla Matemática 🚀</h1>
+
+<div style="position:relative; height:200px;">
+    <div class="rocket player1" style="left:20%;">
+        <div class="body"><div class="window"></div></div>
+        <p>Jugador 1 ❤️ <span id="vida1">100</span></p>
+    </div>
+
+    <div class="rocket player2" style="right:20%;">
+        <div class="body"><div class="window"></div></div>
+        <p>Jugador 2 ❤️ <span id="vida2">100</span></p>
+    </div>
+
+    <div class="misil" id="misil"></div>
+    <div class="explosion" id="explosion"></div>
+</div>
+
+<div class="caja">
+    <h2 id="turno"></h2>
+    <h3 id="pregunta"></h3>
+    <p id="nivel"></p>
+    <p>⏱️ Tiempo: <span id="tiempo">20</span>s</p>
+    <input type="number" id="respuesta">
+    <br><br>
+    <button onclick="verificar()">Responder 🚀</button>
+</div>
+
+<!-- MENÚ FINAL -->
+<div class="menu-final" id="menuFinal">
+    <h1 id="ganador"></h1>
+    <button onclick="reiniciar()">🔄 Reiniciar partida</button>
+</div>
+
+<script>
+let vida1, vida2, turno, nivel, contadorPreguntas;
+let num1, num2, resultado, operacion;
+let tiempo, intervalo;
+
+function iniciarJuego() {
+    vida1 = 100;
+    vida2 = 100;
+    turno = 1;
+    nivel = 1;
+    contadorPreguntas = 0;
+
+    document.getElementById("menuFinal").style.display = "none";
+
+    actualizar();
+    nuevaPregunta();
+}
+
+function nuevaPregunta() {
+
+    if (contadorPreguntas % 3 === 0 && contadorPreguntas !== 0) {
+        nivel++;
+    }
+
+    let max = nivel * 10;
+
+    num1 = Math.floor(Math.random() * max);
+    num2 = Math.floor(Math.random() * max);
+
+    if (Math.random() > 0.5) {
+        operacion = "+";
+        resultado = num1 + num2;
+    } else {
+        operacion = "-";
+
+        if (num1 < num2) {
+            let temp = num1;
+            num1 = num2;
+            num2 = temp;
+        }
+
+        resultado = num1 - num2;
+    }
+
+    document.getElementById("pregunta").innerText =
+        `¿Cuánto es ${num1} ${operacion} ${num2}?`;
+
+    document.getElementById("turno").innerText =
+        `Turno del Jugador ${turno}`;
+
+    document.getElementById("nivel").innerText =
+        `Nivel: ${nivel}`;
+
+    document.getElementById("respuesta").value = "";
+
+    iniciarTemporizador();
+}
+
+function iniciarTemporizador() {
+    tiempo = 20;
+    document.getElementById("tiempo").innerText = tiempo;
+
+    clearInterval(intervalo);
+
+    intervalo = setInterval(() => {
+        tiempo--;
+        document.getElementById("tiempo").innerText = tiempo;
+
+        if (tiempo <= 0) {
+            clearInterval(intervalo);
+            tiempoAgotado();
+        }
+    }, 1000);
+}
+
+function tiempoAgotado() {
+    alert("⏰ ¡Se acabó el tiempo!");
+    errorPantalla();
+
+    contadorPreguntas++;
+
+    turno = turno === 1 ? 2 : 1;
+    nuevaPregunta();
+}
+
+function disparo(jugador) {
+    let misil = document.getElementById("misil");
+    let explosion = document.getElementById("explosion");
+
+    misil.style.display = "block";
+
+    if (jugador === 1) {
+        misil.className = "misil misil-1";
+        explosion.style.left = "70%";
+    } else {
+        misil.className = "misil misil-2";
+        explosion.style.left = "25%";
+    }
+
+    setTimeout(() => {
+        misil.style.display = "none";
+        explosion.style.display = "block";
+
+        setTimeout(() => {
+            explosion.style.display = "none";
+        }, 300);
+    }, 600);
+}
+
+function errorPantalla() {
+    document.body.style.background = "red";
+    setTimeout(() => {
+        document.body.style.background = "linear-gradient(#87CEEB, #4CAF50)";
+    }, 300);
+}
+
+function verificar() {
+    clearInterval(intervalo);
+
+    let resp = parseInt(document.getElementById("respuesta").value);
+    contadorPreguntas++;
+
+    if (resp === resultado) {
+        if (turno === 1) {
+            vida2 -= 20;
+            disparo(1);
+        } else {
+            vida1 -= 20;
+            disparo(2);
+        }
+    } else {
+        errorPantalla();
+    }
+
+    actualizar();
+
+    if (vida1 <= 0) {
+        mostrarGanador("🏆 ¡Jugador 2 gana!");
+        return;
+    } else if (vida2 <= 0) {
+        mostrarGanador("🏆 ¡Jugador 1 gana!");
+        return;
+    }
+
+    turno = turno === 1 ? 2 : 1;
+    nuevaPregunta();
+}
+
+function mostrarGanador(texto) {
+    document.getElementById("ganador").innerText = texto;
+    document.getElementById("menuFinal").style.display = "flex";
+}
+
+function reiniciar() {
+    iniciarJuego();
+}
+
+function actualizar() {
+    document.getElementById("vida1").innerText = vida1;
+    document.getElementById("vida2").innerText = vida2;
+}
+
+iniciarJuego();
+</script>
+
+</body>
+</html>
